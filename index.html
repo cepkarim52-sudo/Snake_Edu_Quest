@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Snake Edu Quest v1</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07111e;color:#eafff5;font-family:system-ui,Arial,sans-serif;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+:root{--green:#65f59a;--lime:#b7ff62;--cyan:#43dfff;--dark:#07111e;--panel:#102538}
+#app{height:100dvh;min-height:500px;display:flex;align-items:center;justify-content:center;padding:8px;background:radial-gradient(circle at 50% 0,#174d50,#07111e 65%)}
+.screen{display:none;width:min(1000px,100%);height:min(760px,100%);border:2px solid #2b8d78;border-radius:20px;overflow:hidden;background:linear-gradient(145deg,#102c3b,#081722);box-shadow:0 0 30px #31e5a52b}
+.screen.active{display:flex;flex-direction:column}.top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;background:#0b2635;border-bottom:1px solid #2d8c7c}
+.logo{font-size:clamp(20px,4vw,32px);font-weight:1000;font-style:italic;color:var(--lime);text-shadow:0 0 12px #79ff9b66}
+.content{padding:clamp(14px,3vw,28px);overflow:auto;flex:1}.hero{flex:1;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:12px;padding:clamp(18px,4vw,42px)}
+h1{font-size:clamp(38px,7vw,72px);line-height:.95;margin:8px 0;color:#f1fff5;text-shadow:3px 4px #07111e}h1 span{color:var(--lime)}
+p{color:#b8d6d2;line-height:1.55}.snakeart{text-align:center;font-size:clamp(75px,17vw,175px);filter:drop-shadow(0 0 20px #50ff9b88)}
+.btn{border:0;border-radius:12px;padding:13px 20px;font-weight:950;background:linear-gradient(#d8ff78,#82df3d);color:#122b1b;box-shadow:0 4px #397b2c;min-height:46px}.btn:active{transform:translateY(2px);box-shadow:0 2px #397b2c}.btn.alt{background:linear-gradient(#8ceeff,#25a9d5);box-shadow:0 4px #17617b;color:#062433}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.panel{background:#0a1d2a;border:1px solid #2d8875;border-radius:16px;padding:20px;max-width:620px;margin:auto}
+label{display:block;margin:12px 0 6px;font-weight:800;color:#bce9d8}input{width:100%;padding:13px;border-radius:10px;border:2px solid #398d7d;background:#e9fff5;color:#10251e;font-weight:700}
+.rulegrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.rule{padding:13px;background:#123447;border:1px solid #286f70;border-radius:12px;color:#d9f5ec}
+.qcard{max-width:820px;margin:auto;background:#0b1d2a;border:1px solid #318b7b;border-radius:18px;padding:clamp(16px,3vw,28px)}
+.qnum{font-size:13px;color:var(--cyan);font-weight:950;letter-spacing:1px}.question{font-size:clamp(22px,4vw,34px);font-weight:900;line-height:1.3;margin:16px 0}
+.opts{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.opt{background:#12364a;color:#eafff5;border:1px solid #318ba0;border-radius:11px;padding:12px;text-align:left;font-weight:750}.opt b{display:inline-grid;place-items:center;background:#4bd8e9;color:#092533;width:29px;height:29px;border-radius:8px;margin-right:8px}
+.hud{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;padding:8px 10px;background:#0b2736}.pill{padding:7px 10px;border-radius:9px;background:#06151f;border:1px solid #28776d;font-weight:950;font-size:clamp(12px,2vw,15px);white-space:nowrap}#timer{color:#d9ff6c;font-variant-numeric:tabular-nums}
+.arenaWrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:8px;background:#07151e}
+#arena{width:min(100%,680px);height:100%;max-height:590px;aspect-ratio:1/1;background:#0a1c27;border:5px solid #3be39c;border-radius:8px;box-shadow:0 0 18px #33ffa044;display:grid;grid-template-columns:repeat(20,1fr);grid-template-rows:repeat(20,1fr);position:relative;overflow:hidden}
+.cell{border:1px solid #173341;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;font-size:clamp(8px,1.8vw,15px)}
+.wall{background:linear-gradient(135deg,#287d80,#164d59);box-shadow:inset 0 0 5px #7fffd333}
+.snake{background:#65f59a;border:1px solid #b9ffd1;border-radius:4px;box-shadow:0 0 8px #59ff9c}
+.head{background:#c7ff67;border:2px solid white;border-radius:6px;box-shadow:0 0 12px #c7ff67}
+#arena.shock{animation:arenaJolt .38s linear}
+#arena.shock .snake,#arena.shock .head{animation:snakeZap .38s steps(2,end);background:#eaffff!important;border-color:#fff!important;box-shadow:0 0 5px #fff,0 0 14px #5ceaff,0 0 24px #5ceaff!important}
+@keyframes arenaJolt{0%,100%{transform:translate(0,0)}15%{transform:translate(-3px,1px)}30%{transform:translate(3px,-1px)}45%{transform:translate(-2px,-2px)}60%{transform:translate(2px,2px)}75%{transform:translate(-1px,1px)}}
+@keyframes snakeZap{0%,100%{filter:brightness(1);opacity:1}20%{filter:brightness(2.8);opacity:.45}45%{filter:brightness(1.8);opacity:1}70%{filter:brightness(3);opacity:.55}}
+
+.food{border-radius:50%;font-weight:1000;color:#fff;text-shadow:0 1px 3px #000;background:#193f52;border:2px solid var(--cyan);box-shadow:0 0 8px currentColor}
+.food.A{border-color:#ffc45a;color:#ffc45a}.food.B{border-color:#55dfff;color:#55dfff}.food.C{border-color:#72ff9c;color:#72ff9c}.food.D{border-color:#d59aff;color:#d59aff}.food.E{border-color:#ff79c9;color:#ff79c9}
+.bonus{color:#ffe66d;border:2px solid #ffe66d;border-radius:50%;box-shadow:0 0 9px #ffe66d}
+.bomb{color:#ff7181;border:2px solid #ff7181;border-radius:50%;background:#451b2b;box-shadow:0 0 10px #ff5268}.poison{color:#c7ff62;border:2px solid #b8ff45;border-radius:50%;background:#31421a;box-shadow:0 0 10px #aaff39}.snack{color:#ffb46b;border:2px solid #ffb46b;border-radius:50%;background:#4a2c19;box-shadow:0 0 9px #ffb46b}
+.controls{display:flex;justify-content:center;align-items:center;gap:8px;padding:9px;background:#0b2736}
+.dpad{display:grid;grid-template-columns:48px 48px 48px;grid-template-rows:40px 40px;gap:4px}
+.dpad button{border:0;border-radius:9px;background:linear-gradient(#9af1e5,#36bca7);color:#082c2a;font-size:20px;font-weight:1000;box-shadow:0 3px #17685f;touch-action:none}
+.dpad .up{grid-column:2}.dpad .left{grid-column:1;grid-row:2}.dpad .down{grid-column:2;grid-row:2}.dpad .right{grid-column:3;grid-row:2}
+#overlay{position:absolute;inset:0;background:#04131bdc;display:none;align-items:center;justify-content:center;padding:15px;z-index:5}
+.overlaybox{max-width:400px;width:100%;padding:22px;text-align:center;border-radius:16px;border:2px solid var(--lime);background:#102c3a;box-shadow:0 0 25px #65f59a55}.overlaybox h2{margin:0 0 8px;color:var(--lime)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:18px 0}.stat{background:#12384a;border:1px solid #318b7b;border-radius:12px;padding:14px}.stat strong{display:block;font-size:28px;color:var(--lime)}
+@media(max-width:620px){
+ #app{padding:3px;min-height:0;height:100dvh}
+ .screen{height:100%;min-height:0;border-radius:12px;border-width:1px}
+ .hero{grid-template-columns:1fr;text-align:center;padding:12px;gap:4px;align-content:center}
+ .hero>div:first-child{display:flex;flex-direction:column;align-items:center}
+ .hero p{max-width:330px;margin:8px auto}
+ .hero .row{justify-content:center;width:100%;margin-top:12px}
+ .hero .btn{min-width:190px}
+ .snakeart{font-size:clamp(58px,13vh,95px)}
+ .rulegrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ .rule{padding:8px;font-size:12px;line-height:1.25}
+ .content{padding:9px;min-height:0}
+ #rules .content{overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:6px}
+ #rules .content h2{font-size:19px;margin:0}
+ #rules .content>p{font-size:12px;line-height:1.3;margin:0 0 3px}
+ #rules .row{margin-top:5px;justify-content:center}
+ #rules .row .btn{width:100%;padding:10px 8px;font-size:12px;min-height:42px}
+ #question .content{overflow:hidden;display:flex;align-items:center;justify-content:center}
+ .qcard{width:100%;padding:12px;border-radius:13px}
+ .question{font-size:clamp(17px,4.6vw,23px);line-height:1.2;margin:9px 0}
+ .opts{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ .opt{padding:8px;font-size:12px;line-height:1.2}
+ .opt b{width:23px;height:23px;margin-right:5px}
+ #question .qcard>p{font-size:11px;line-height:1.25;margin:8px 0}
+ #question .row{margin-top:8px;justify-content:center}
+ #question .row .btn{width:100%;min-height:42px;padding:9px}
+ .arenaWrap{padding:5px}.hud{justify-content:center;padding:6px}.pill{padding:6px 8px}.controls{padding:6px}
+}
+@media(max-width:620px) and (max-height:700px){
+ .hero{padding:6px;gap:0}.snakeart{font-size:52px}
+ #rules .content>p{font-size:11px}
+ .rule{font-size:11px;padding:6px}
+ .qcard{padding:8px}.question{font-size:17px;margin:6px 0}
+ .opt{padding:6px;font-size:11px}
+}
+
+</style></head>
+<body><div id="app">
+<section id="home" class="screen active"><div class="hero"><div><div class="logo">SNAKE EDU QUEST</div><h1>CLASSIC <span>SNAKE</span></h1><p>Jelajahi arena, cari huruf jawaban yang tersebar, hindari dinding, dan selesaikan 10 tantangan!</p><div class="row"><button class="btn" onclick="show('rules')">▶ MULAI GAME</button></div></div><div class="snakeart">🐍</div></div><div style="text-align:center;padding:9px;color:#83aaa5;font-size:12px">RETRO ARCADE • OFFLINE • HP & LAPTOP • KECEPATAN BERTAHAP</div></section>
+<section id="identity" class="screen"><div class="top"><div class="logo">IDENTITAS PEMAIN</div><button class="btn alt" onclick="show('home')">⌂</button></div><div class="content" style="display:grid;place-items:center"><div class="panel" style="width:min(500px,100%)"><h2>Siapa pemainnya?</h2><label>Nama siswa</label><input id="name" placeholder="Nama siswa"><label>Kelas</label><select id="class" style="width:100%;padding:13px;border-radius:10px;border:2px solid #398d7d;background:#e9fff5;color:#10251e;font-weight:700"><option value="">Pilih kelas</option><option value="X AT 1">X AT 1</option><option value="X AT 2">X AT 2</option><option value="X AT 3">X AT 3</option><option value="X AT 4">X AT 4</option></select><div class="row"><button class="btn" onclick="begin()">LANJUT ➜</button></div></div></div></section>
+<section id="rules" class="screen"><div class="top"><div class="logo">WAJIB BACA ATURAN PERMAINAN</div></div><div class="content"><h2>Aturan Snake Edu Quest</h2><p>Jawab soal terlebih dahulu. Setelah menekan SIAP MENJAWAB, timer 2 menit mulai di arena. Gerakkan ular dengan santai untuk memakan huruf jawaban yang benar. Kecepatan awal 0,5 detik per langkah, lalu bertambah setelah soal ke-3, ke-5, dan ke-7.</p><div class="rulegrid"><div class="rule">🔤 <b>Huruf A–E</b><br>Posisi tersebar dan diacak.</div><div class="rule">🧱 <b>Dinding</b><br>Hindari pembatas dan dinding dalam.</div><div class="rule">❤️ <b>Nyawa</b><br>Mulai 5, maksimal 10.</div><div class="rule">🐍 <b>Ular</b><br>Ular bertambah panjang saat makan. Kecepatan bertambah bertahap setelah soal ke-3, ke-5, dan ke-7.</div><div class="rule">☠️ <b>Racun</b><br>Hanya ada apel dan racun. Apel memperpanjang tubuh ular; racun atau tabrakan mengurangi 1 nyawa tanpa mengganti soal selama nyawa masih ada.</div><div class="rule">🕹️ <b>Kontrol</b><br>Panah keyboard, tombol, atau swipe.</div></div><div class="row"><button class="btn" onclick="show('identity')">SAYA SUDAH MEMBACA ATURAN — LANJUT ➜</button></div></div></section>
+<section id="question" class="screen"><div class="top"><div class="logo">SNAKE <span style="color:#d9ff6c">CHALLENGE</span></div><div class="pill" id="qnum">SOAL 1 / 10</div></div><div class="content" style="display:grid;place-items:center"><div class="qcard"><div class="qnum">BACA SOAL DAN INGAT HURUF JAWABAN</div><div class="question" id="qtext"></div><div class="opts" id="opts"></div><p>Timer 2 menit baru dimulai setelah menekan tombol SIAP MENJAWAB. Ingat huruf jawaban yang benar!</p><div class="row"><button class="btn" onclick="startArena()">🐍 SIAP MENJAWAB</button></div></div></div></section>
+<section id="game" class="screen"><div class="hud"><div class="pill" id="gq">SOAL 1/10</div><div class="pill" id="hearts">❤️❤️❤️❤️❤️</div><div class="pill">BENAR <span id="score">0</span></div><div class="pill">⚡ <span id="speed">2.0 langkah/dtk</span></div><div class="pill">⏱ <span id="timer">02:00</span></div></div><div class="arenaWrap"><div id="arena"><div id="overlay"><div class="overlaybox"><h2 id="ovtitle">JAWABAN BENAR!</h2><p id="ovtext"></p><button class="btn" id="ovbtn" onclick="continueGame()">SOAL BERIKUTNYA</button></div></div></div></div><div class="controls"><div class="dpad"><button class="up" data-dir="up">▲</button><button class="left" data-dir="left">◀</button><button class="down" data-dir="down">▼</button><button class="right" data-dir="right">▶</button></div></div></section>
+<section id="result" class="screen"><div class="top"><div class="logo">HASIL AKHIR</div></div><div class="content" style="text-align:center"><div style="font-size:65px">🏆</div><h2 id="resname">Permainan selesai</h2><p id="resclass"></p><h2 id="status" style="font-size:28px">LULUS</h2><div class="stats"><div class="stat">Soal benar<strong id="rc">0</strong></div><div class="stat">Soal salah<strong id="rw">0</strong></div><div class="stat">Nilai<strong id="grade">0</strong></div><div class="stat">Sisa nyawa<strong id="rl">0</strong></div><div class="stat">Jumlah benar<strong id="rs">0</strong></div></div><div class="row" style="justify-content:center"><button class="btn" id="retryBtn" onclick="retry()">⟳ ULANGI</button><button class="btn alt" id="finishBtn" onclick="finish()">SELESAI ➜</button></div><p id="saveStatus" style="font-size:12px;color:#a8d8cb;margin-top:12px">Hasil akan dikirim ke Google Sheet.</p></div></section>
+</div>
+<script>
+const bank=[{"q":"Berikut adalah unsur yang terletak di sebelah kiri unsur H dalam deret unsur non logam, kecuali…","a":["C","N","Cl","P","Si"],"c":2},{"q":"Unsur yang terletak di sebelah kiri unsur H dalam deret unsur non logam adalah…","a":["C","Cl","S","I","Br"],"c":0},{"q":"Berdasarkan aturan penulisan rumus senyawa, dimana unsur yang terletak di sebelah kiri ditulis terlebih dahulu, maka diantara rumus kimia senyawa berikut yang penulisannnya salah adalah…","a":["HCl","CO₂","NH₃","OC","CCl₄"],"c":3},{"q":"Berdasarkan aturan penulisan rumus senyawa, dimana unsur yang terletak di sebelah kiri ditulis terlebih dahulu, maka diantara rumus kimia senyawa berikut yang penulisannnya benar adalah…","a":["O₂Si","ClH","H₃N","OC","NH₃"],"c":4},{"q":"Salah satu senyawa yang mengakibatkan pemanasan global adalah senyawa yang terbentuk antara unsur C dan O dengan angka indeksnya (C = 1 dan O = 2), Rumus kimia senyawa tersebut adalah…","a":["CO","C₂O","CO₂","OC","O₂C"],"c":2},{"q":"Nama dari senyawa dengan rumus kimia HBr adalah… (diketahui H dan Br hanya membentuk 1 jenis senyawa)","a":["Hidrogen Bromida","Hidrogen Brom","Hidrida Brom","Hidrida Bromida","Brom Hidrida"],"c":0},{"q":"Pasir yang digunakan sebagai bahan mineral pada beberapa kebutuhan peternakan mengandung silikon dioksida. Senyawa ini juga banyak ditemukan dalam bahan mineral dan batuan. Senyawa silikon dioksida merupakan gabungan unsur Si dan O dengan angka indeks (Si = 1 dan O = 2), dan gabungan unsur Si dan O dapat membentuk 2 atau lebih senyawa, tentukan rumus dari senyawa silikon dioksida ini!","a":["SiO","Si₂O","SiO₂","O₂Si","OSi"],"c":2},{"q":"Senyawa fosfina (fosfor hidrida) dapat terbentuk dalam kondisi tertentu dari bahan yang mengandung fosfor. Fosfina merupakan gas beracun dan bukan gas yang seharusnya sengaja dihasilkan dalam pengelolaan peternakan. Senyawa fosfina merupakan gabungan antara P dan H dengan angka indeks (P = 1 dan H = 3), dan gabungan unsur P dan H hanya membentuk 1 jenis senyawa, tuliskan rumus senyawa fosfina ini!","a":["P₃H","H₃P","HP","PH","PH₃"],"c":4},{"q":"Dalam industri kimia, senyawa yang mengandung P dan Cl digunakan sebagai bahan antara untuk pembuatan berbagai produk kimia. Senyawa tersebut perlu ditangani oleh tenaga terlatih karena bersifat berbahaya. Dengan angka indeksnya (P = 1 dan Cl = 5), antara P dan Cl hanya membentuk 2 jenis senyawa, tuliskan rumus dan nama dari senyawa tersebut!","a":["PCl₅ dan forfor klorida","PCl₅ dan fosfor pentaklorida","PCl₅ dan Monofosfor pentaklorida","PCl₅ dan Monofosfor klorida","PCl₅ dan Monofosfor monoklorida"],"c":1},{"q":"Dalam pengelolaan kotoran ternak dan pupuk kandang, mikroorganisme tanah dapat menghasilkan gas yang mengandung unsur N dan O. Gas ini termasuk gas rumah kaca yang berkontribusi terhadap pemanasan global. Diketahui angka indeksnya (N = 2 dan O = 1), antara unsur N dan O dapat membentuk 2 jenis senyawa atau lebih, tentukan rumus dan nama senyawa tersebut!","a":["NO dan dinitrogen oksida","NO₂ dan nitrogen dioksida","N₂O dan nitrogen monooksida","N₂O dan dinitrogen monoksida","NO₂ dan dinitrogen monoksida"],"c":3}];
+document.addEventListener('contextmenu',e=>e.preventDefault());document.addEventListener('selectstart',e=>{if(!e.target.closest('input,select,textarea'))e.preventDefault()});document.addEventListener('dragstart',e=>e.preventDefault());
+const $=id=>document.getElementById(id);
+const SHEET_WEB_APP_URL="https://script.google.com/macros/s/AKfycbzd2yVhVqU1cnF6G7jMtLfygtxD91G4YJ7EhI8rHMwl-FbYbe9JDvo_4Y-2g2lrgTLI/exec";
+let player="",kelas="",n=0,lives=5,score=0,coins=0,correct=0,wrong=0,body=[],dir={x:1,y:0},nextDir={x:1,y:0},foods=[],walls=[],timer=120,tickId=null,clockId=null,active=false,grid=20,headStart={x:5,y:10},stepMs=500,wallLock=false,attemptNo=0,attemptStartedAt=0,savedThisAttempt=false;
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));$(id).classList.add('active')}
+function begin(){player=$('name').value.trim()||'Pembalap';kelas=$('class').value.trim()||'-';n=0;lives=5;score=0;coins=0;correct=0;wrong=0;attemptNo=1;attemptStartedAt=Date.now();savedThisAttempt=false;showQ()}
+function showQ(){if(n>=10||lives<=0){results();return}let q=bank[n];$('qnum').textContent=`SOAL ${n+1} / 10`;$('qtext').textContent=q.q;let order=[0,1,2,3,4].sort(()=>Math.random()-.5);$('opts').innerHTML=order.map(i=>`<div class="opt"><b>${'ABCDE'[i]}</b>${q.a[i]}</div>`).join('');show('question')}
+function cell(x,y,cls,txt=''){let d=document.createElement('div');d.className='cell '+cls;d.textContent=txt;d.style.gridColumn=x+1;d.style.gridRow=y+1;$('arena').appendChild(d);return d}
+function occupied(x,y){return body.some(p=>p.x===x&&p.y===y)||walls.some(p=>p.x===x&&p.y===y)||foods.some(p=>p.x===x&&p.y===y)}
+function randPos(minGap=0){let p,tries=0;do{p={x:1+Math.floor(Math.random()*18),y:1+Math.floor(Math.random()*18)};tries++;}while((occupied(p.x,p.y)||(Math.abs(p.x-body[0].x)+Math.abs(p.y-body[0].y)<5)||foods.some(f=>Math.abs(f.x-p.x)+Math.abs(f.y-p.y)<minGap))&&tries<120);return p}
+function setupArena(){let a=$('arena');a.querySelectorAll('.cell').forEach(x=>x.remove());walls=[];foods=[];if(!body.length){body=[{x:5,y:10},{x:4,y:10},{x:3,y:10}];dir={x:1,y:0};nextDir={x:1,y:0}}const addWall=p=>{if(!body.some(b=>b.x===p.x&&b.y===p.y))walls.push(p)};for(let x=0;x<20;x++){addWall({x,y:0});addWall({x,y:19})}for(let y=1;y<19;y++){addWall({x:0,y});addWall({x:19,y})}
+ for(let x=5;x<=14;x++){if(x!==9&&x!==10)addWall({x,y:6});if(x!==7&&x!==8)addWall({x,y:13})}
+ let stage=n>=7?3:n>=5?2:n>=3?1:0;
+ // Dinding dalam bertambah bertahap, tetapi selalu menyisakan celah untuk dilalui.
+ const extraWalls=[
+   [],
+   [{x:4,y:3},{x:4,y:4},{x:4,y:5},{x:15,y:14},{x:15,y:15},{x:15,y:16}],
+   [{x:4,y:3},{x:4,y:4},{x:4,y:5},{x:15,y:14},{x:15,y:15},{x:15,y:16},
+    {x:3,y:9},{x:4,y:9},{x:15,y:9},{x:16,y:9}],
+   [{x:4,y:3},{x:4,y:4},{x:4,y:5},{x:15,y:14},{x:15,y:15},{x:15,y:16},
+    {x:3,y:9},{x:4,y:9},{x:15,y:9},{x:16,y:9},
+    {x:8,y:3},{x:9,y:3},{x:10,y:3},{x:11,y:16},{x:12,y:16}]
+ ];
+ extraWalls[stage].forEach(p=>{if(!walls.some(w=>w.x===p.x&&w.y===p.y))addWall(p)});
+ // Huruf jawaban diacak dan disebar berjauhan agar ular perlu menelusuri arena.
+ const letterFoods=[];
+ ['A','B','C','D','E'].sort(()=>Math.random()-.5).forEach(l=>{let p=randPos(4);let f={...p,type:'letter',label:l};foods.push(f);letterFoods.push(f)});
+ const snackCount=[10,14,18,22][stage], poisonCount=[2,3,4,5][stage];
+ // Apel ditempatkan dekat salah satu huruf jawaban agar ular bisa mengambilnya saat mendekati jawaban.
+ function nearLetterPos(){
+   for(let t=0;t<100;t++){
+     const anchor=letterFoods[Math.floor(Math.random()*letterFoods.length)];
+     const p={x:anchor.x+Math.floor(Math.random()*5)-2,y:anchor.y+Math.floor(Math.random()*5)-2};
+     if(p.x<1||p.x>18||p.y<1||p.y>18||occupied(p.x,p.y))continue;
+     if(Math.abs(p.x-body[0].x)+Math.abs(p.y-body[0].y)<5)continue;
+     return p;
+   }
+   return randPos(1);
+ }
+ for(let i=0;i<snackCount;i++){let p=nearLetterPos();foods.push({...p,type:'snack',label:'🍎'})}
+ for(let i=0;i<poisonCount;i++){let p=randPos(3);foods.push({...p,type:'poison',label:'☠'})}
+ render()}
+function render(){let a=$('arena');a.querySelectorAll('.cell').forEach(x=>x.remove());walls.forEach(p=>cell(p.x,p.y,'wall'));foods.forEach(f=>cell(f.x,f.y,f.type==='letter'?'food '+f.label:f.type==='poison'?'poison':f.type==='snack'?'snack':'bomb',f.label));body.forEach((p,i)=>cell(p.x,p.y,i===0?'head':'snake',i===0?'●':''))}
+function currentSpeed(){return n>=7?280:n>=5?350:n>=3?420:500}
+function startArena(){show('game');wallLock=false;setupArena();timer=120;active=true;stepMs=currentSpeed();$('gq').textContent=`SOAL ${n+1}/10`;$('speed').textContent=(1000/stepMs).toFixed(1)+' langkah/dtk';hud();$('timer').textContent='02:00';clearInterval(tickId);clearInterval(clockId);tickId=setInterval(step,stepMs);clockId=setInterval(()=>{if(!active)return;timer--;let mm=String(Math.floor(timer/60)).padStart(2,'0'),ss=String(timer%60).padStart(2,'0');$('timer').textContent=mm+':'+ss;if(timer<=0){wrong++;lives=Math.max(0,lives-1);shockSnake();hud();resolve(false,'WAKTU HABIS','Waktu 2 menit habis. Nyawa berkurang 1 dan lanjut ke soal berikutnya.')}},1000)}
+function shockSnake(){const a=$('arena');a.classList.remove('shock');void a.offsetWidth;a.classList.add('shock');setTimeout(()=>a.classList.remove('shock'),480)}
+function hud(){$('hearts').textContent='❤️'.repeat(lives)+'🖤'.repeat(10-lives);$('score').textContent=correct}
+function growSnake(){body.push({...body[body.length-1]})}
+function step(){if(!active)return;dir=nextDir;let h={x:body[0].x+dir.x,y:body[0].y+dir.y};let hitWall=walls.some(p=>p.x===h.x&&p.y===h.y),hitSelf=body.some(p=>p.x===h.x&&p.y===h.y);if(hitWall||hitSelf){lives=Math.max(0,lives-1);shockSnake();hud();if(lives<=0){resolve(false,'GAME OVER','Nyawa habis setelah beberapa kali menabrak dinding atau tubuh sendiri.');return}const turns=[{x:-dir.y,y:dir.x},{x:dir.y,y:-dir.x},{x:-dir.x,y:-dir.y}];const safe=turns.find(d=>{const nx=body[0].x+d.x,ny=body[0].y+d.y;return !walls.some(p=>p.x===nx&&p.y===ny)&&!body.some((p,i)=>i>0&&p.x===nx&&p.y===ny)});if(safe){dir=safe;nextDir=safe}return}
+ body.unshift(h);let f=foods.find(p=>p.x===h.x&&p.y===h.y);if(f){foods=foods.filter(x=>x!==f);
+ if(f.type==='letter'){if(f.label==='ABCDE'[bank[n].c]){growSnake();correct++;score=correct;lives=Math.min(10,lives+1);resolve(true,'JAWABAN BENAR!','Tubuh ular bertambah sama seperti saat memakan 1 apel. Kamu mendapat 1 nyawa!')}else{wrong++;lives=Math.max(0,lives-1);shockSnake();resolve(false,'JAWABAN SALAH!','Nyawa berkurang 1. Lanjut ke soal berikutnya.')}}
+ else if(f.type==='snack'){growSnake()}
+ else if(f.type==='poison'||f.type==='bomb'){lives=Math.max(0,lives-1);shockSnake();hud();if(lives<=0){resolve(false,'GAME OVER','Terkena racun. Nyawa habis!');return}body.pop();render();return}
+ }else body.pop();hud();render()}
+function resolve(ok,title,msg){if(!active)return;active=false;clearInterval(tickId);clearInterval(clockId);$('ovtitle').textContent=title;$('ovtext').textContent=msg+` Skor: ${score} • Nyawa: ${lives}`;$('ovbtn').textContent=(n===9||lives<=0)?'LIHAT HASIL':'SOAL BERIKUTNYA';$('overlay').style.display='flex'}
+function continueGame(){$('overlay').style.display='none';n++;if(n>=10||lives<=0){results();return}showQ()}
+function endSession(){if(active){wrong++;resolve(false,'SESI DIAKHIRI','Sesi dihentikan. Hasil akan dihitung.')}else results()}
+function calcGrade(){return correct<=5?Math.round(correct*15.2):Math.round(76+(correct-5)*2.8)}
+function sendResultToSheet(grade){
+ if(savedThisAttempt)return;
+ savedThisAttempt=true;
+ const answered=Math.min(10,correct+wrong);
+ const payload={
+   game:"snake",
+   nama:player,
+   kelas:kelas,
+   skor:grade,
+   soal_dijawab:answered,
+   soal_benar:correct,
+   total_soal:10,
+   status_kelulusan:grade>=76?"LULUS":"TIDAK LULUS",
+   waktu_detik:Math.max(0,Math.round((Date.now()-attemptStartedAt)/1000))
+ };
+ const status=$('saveStatus');
+ if(status)status.textContent='Mengirim hasil ke Google Sheet…';
+ fetch(SHEET_WEB_APP_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+   .then(()=>{if(status)status.textContent='Permintaan pengiriman sudah dikirim. Periksa tab “Hasil Snake” di Google Sheet.';})
+   .catch(()=>{if(status)status.textContent='Pengiriman belum berhasil. Periksa koneksi internet lalu coba ulangi permainan.';savedThisAttempt=false;});
+}
+function results(){clearInterval(tickId);clearInterval(clockId);let grade=calcGrade();sendResultToSheet(grade);$('resname').textContent=player+' — hasil permainan';$('resclass').textContent='Kelas: '+kelas;$('rc').textContent=correct;$('rw').textContent=wrong;$('grade').textContent=grade;$('rl').textContent=lives;$('rs').textContent=score;$('status').textContent=grade>=76?'LULUS':'BELUM LULUS';$('status').style.color=grade>=76?'#8dffad':'#ff8d9b';$('retryBtn').style.display=grade<90?'inline-block':'none';$('finishBtn').style.display=grade>=76?'inline-block':'none';show('result')}
+function retry(){attemptNo++;attemptStartedAt=Date.now();savedThisAttempt=false;if($('saveStatus'))$('saveStatus').textContent='Hasil percobaan berikutnya akan dikirim setelah selesai.';n=0;lives=5;score=0;coins=0;correct=0;wrong=0;stepMs=500;body=[{x:5,y:10},{x:4,y:10},{x:3,y:10}];dir={x:1,y:0};nextDir={x:1,y:0};wallLock=false;$('overlay').style.display='none';showQ()}
+function finish(){$('overlay').style.display='none';show('home')}
+function reset(){retry()}
+function turn(x,y){if(!active)return;if(x===-dir.x&&y===-dir.y)return;nextDir={x,y}}
+document.querySelectorAll('[data-dir]').forEach(b=>{let d=b.dataset.dir;b.addEventListener('pointerdown',e=>{e.preventDefault();({up:()=>turn(0,-1),down:()=>turn(0,1),left:()=>turn(-1,0),right:()=>turn(1,0)})[d]()})});
+document.addEventListener('keydown',e=>{let m={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]};if(m[e.key]){e.preventDefault();turn(...m[e.key])}});
+let touchStart=null;$('arena').addEventListener('touchstart',e=>{touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY}},{passive:true});$('arena').addEventListener('touchend',e=>{if(!touchStart)return;let dx=e.changedTouches[0].clientX-touchStart.x,dy=e.changedTouches[0].clientY-touchStart.y;if(Math.max(Math.abs(dx),Math.abs(dy))>18){if(Math.abs(dx)>Math.abs(dy))turn(dx>0?1:-1,0);else turn(0,dy>0?1:-1)}touchStart=null},{passive:true});
+</script></body></html>
